@@ -1,0 +1,25 @@
+{
+  "name": "ts-to-mkv",
+  "version": "1.0.0",
+  "description": "Automated TS to MKV converter",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "keywords": [
+    "mkv",
+    "handbrake",
+    "ts",
+    "mpeg",
+    "mpeg4",
+    "x264",
+    "quicksync"
+  ],
+  "author": "Tom de Boer <tom@tomdeboer.nl>",
+  "license": "MIT",
+  "dependencies": {
+    "colors": "^1.1.2",
+    "handbrake-js": "^2.0.6",
+    "promise": "^7.0.4"
+  }
+}

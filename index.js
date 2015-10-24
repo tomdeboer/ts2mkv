@@ -1,13 +1,19 @@
 /*jslint node: true, todo: true, vars: true, indent: 4 */
 
+"use strict";
+
 require('colors');
 
 var _fs     = require('fs');
 var _path   = require('path');
 var _hbjs   = require("handbrake-js");
 
-var dir = process.argv[2] + "/";
-var queue = [];
+var queue   = [];
+var config  = {
+    encoder    : "x264",
+    locktimeout: 24*3600,
+    dirs       : []
+};
 
 function _fileexists(filepath) {
     try {
@@ -16,12 +22,6 @@ function _fileexists(filepath) {
         return false;
     }
 }
-
-if (!_fileexists(dir)) {
-    console.log(("Invalid dir: " + dir + ". Usage: node index.js /path/to/ziggo").red);
-    process.exit(1);
-}
-
 function convert(filepath, fn) {
     fn = fn || function () { console.log(arguments); };
 
@@ -32,14 +32,20 @@ function convert(filepath, fn) {
         // var fileinfo  = _fs.statSync(filepath);
         var filelock  = _path.join(filepaths.dir, filepaths.name + '.lock');
 
+        var timestamp = Math.floor(new Date()/1000);
+
         // "Lock" the file
         if (_fileexists(filelock)) {
-            console.error(" > File is locked: skipping it".yellow);
-            fn(new Error("File is locked"));
-            return;
+            if (timestamp - _fs.readFileSync(filelock) < config.locktimeout){
+                console.error(" > File is locked: skipping it".yellow);
+                fn(new Error("File is locked"));
+                return;
+            }
+
+            console.log(" > lock file found, but it has expired. Deleting lock file and continuing...".grey);
         }
 
-        _fs.writeFileSync(filelock, (+new Date()));
+        _fs.writeFileSync(filelock, timestamp);
         console.log(" > File now locked".grey);
 
         var tsfile  = filepath;
@@ -49,7 +55,7 @@ function convert(filepath, fn) {
             aencoder: "copy:ac3",
             modulus: 4,
             decomb: "bob",
-            encoder: "x264",
+            encoder: config.encoder || "x264",
             quality: 20,
             // "use-opencl": "",
             // "use-hwd": "",
@@ -87,15 +93,40 @@ function start() {
     }
 
     var filepath = queue.pop();
-    convert(filepath, start);
+    convert(filepath, function (err) {
+        setImmediate(start);
+    });
 }
 
-_fs.readdirSync(dir).forEach(function (filename) {
-    if (!/\.ts$/.test(filename)) {
+
+try {
+    // Load user config
+    require('util')._extend(config, JSON.parse(_fs.readFileSync('config.json')));
+    console.log("config.json read...".green);
+} catch (err) {
+    console.log(("Warning: could not read/parse config.json!:\n" + err).yellow);
+}
+
+if (config.dirs.length < 1){
+    console.log("Nothing to do: no directories specified in config...".red);
+    return 1;
+}
+config.dirs.forEach(function (dir){
+    dir = dir + "/";
+
+    if (!_fileexists(dir)) {
+        console.log(("Invalid dir: " + dir + ". Usage: node index.js /path/to/ziggo").red);
         return;
     }
-    var path = dir + filename;
-    queue.push(path);
+
+
+    _fs.readdirSync(dir).forEach(function (filename) {
+        if (!/\.ts$/.test(filename)) {
+            return;
+        }
+        var path = dir + filename;
+        queue.push(path);
+    });
 });
 
 start();

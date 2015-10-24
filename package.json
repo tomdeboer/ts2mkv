@@ -19,7 +19,6 @@
   "license": "MIT",
   "dependencies": {
     "colors": "^1.1.2",
-    "handbrake-js": "^2.0.6",
-    "promise": "^7.0.4"
+    "handbrake-js": "^2.0.6"
   }
 }

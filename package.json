@@ -1,14 +1,14 @@
 {
-  "name": "ts-to-mkv",
-  "version": "1.0.0",
-  "description": "Automated TS to MKV converter",
+  "name": "ts2mkv",
+  "version": "1.1.0",
+  "description": "Automated TS (MPEG Transport Stream) to MKV converter",
   "main": "index.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "keywords": [
     "mkv",
-    "handbrake",
+    "ffmpeg",
     "ts",
     "mpeg",
     "mpeg4",
@@ -19,6 +19,6 @@
   "license": "MIT",
   "dependencies": {
     "colors": "^1.1.2",
-    "handbrake-js": "^2.0.6"
+    "fluent-ffmpeg": "^2.0.1"
   }
 }

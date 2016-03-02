@@ -1,7 +1,7 @@
 ts2mkv
 =============
 
-ts2mkv is a small utility that converts transport streams (.ts files) that are recorded by, but not limited to, Ziggo Humax recorders to MKV files. It does this by wrapping handbrake, a video converting utitlty.
+ts2mkv is a small utility that converts transport streams (.ts files) that are recorded by, but not limited to, Ziggo Humax recorders to MKV files. It does this by wrapping ffmpeg, a video converting utitlty.
 
 Goal
 ---
@@ -40,13 +40,11 @@ var config  = {
 };
 ```
 
-
-
 Options
 ---
 
 #### `encoder` (string)
-This is the encoder that is used by Handbrake. [Click here for a list of supported encoders.](https://trac.handbrake.fr/wiki/Encoders#Video)
+This is the encoder that is used by ffmpeg. [Click here for a list of supported encoders.](https://trac.handbrake.fr/wiki/Encoders#Video)
 
 #### `locktimeout` (integer)
 This option specifies the time (in seconds) that a lock is valid. If the time at which the file was locked is longer than ```locktimeout``` seconds ago, the lock is lifted (file deleted).

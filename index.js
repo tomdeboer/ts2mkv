@@ -6,12 +6,14 @@ require('colors');
 
 var _fs     = require('fs');
 var _path   = require('path');
-var _hbjs   = require("handbrake-js");
+var ffmpeg  = require('fluent-ffmpeg');
 
 var queue   = [];
 var config  = {
     encoder    : "x264",
+    remove     : true,
     locktimeout: 24*3600,
+    bitrate    : "8000k",
     dirs       : []
 };
 
@@ -51,35 +53,71 @@ function convert(filepath, fn) {
         var tsfile  = filepath;
         var mkvfile = _path.join(filepaths.dir, filepaths.name + '.mkv');
 
-        _hbjs.spawn({
-            aencoder: "copy:ac3",
-            modulus: 4,
-            decomb: "bob",
-            encoder: config.encoder || "x264",
-            quality: 20,
-            // "use-opencl": "",
-            // "use-hwd": "",
-            input: tsfile,
-            output: mkvfile
+        var command = ffmpeg(tsfile)
+        .videoCodec('libx264')
+        .videoBitrate(config.bitrate)
+        .videoFilters('eq=contrast=1.02')
+        .duration(10)
+        .audioCodec('copy')
+        .outputOptions(
+            '-sn'           // No subtiles
+        )
+        .output(mkvfile)
+        
+        .on('start', function(commandLine) {
+            console.log('Spawned ffmpeg with command:'.grey, commandLine);
         })
-            .on("begin", function () {
-                console.log(" > Starting encoding...".grey);
-            })
-            .on("error", function (err) {
-                console.error(" > Handbrake error: %s".red, err);
-            })
-            .on("progress", function (progress) {
-                console.log(" > status: %s, ETA: %s @ %s fps".grey, progress.percentComplete, progress.eta, progress.fps);
-            })
-            .on("end", function () {
-                console.log(" > Conversion sucess!".green);
+        .on('progress', function(progress) {
+            console.log('Processing:'.grey, progress);
+        })
+        .on('error', function(err, stdout, stderr) {
+            console.log('Cannot process video: '.red.bold, err.message);
+        })
+        .on('end', function() {
+            console.log(" > Conversion finished".green.bold);
+            _fs.unlink(filelock);
+            if (config.remove) {
                 _fs.unlink(tsfile);
-            })
-            .on("complete", function () {
-                _fs.unlink(filelock);
-                console.log(" > Conversation complete...".grey);
-                fn(null);
-            });
+            }
+            fn(null);
+        })
+
+        .run();
+        
+
+
+
+        // _hbjs.spawn({
+        //     aencoder: "copy:ac3",
+        //     modulus: 4,
+        //     decomb: "bob",
+        //     encoder: config.encoder || "x264",
+        //     quality: 20,
+        //     // "use-opencl": "",
+        //     // "use-hwd": "",
+        //     input: tsfile,
+        //     output: mkvfile
+        // })
+        //     .on("begin", function () {
+        //         console.log(" > Starting encoding...".grey);
+        //     })
+        //     .on("error", function (err) {
+        //         console.error(" > Handbrake error: %s".red, err);
+        //     })
+        //     .on("progress", function (progress) {
+        //         console.log(" > status: %s, ETA: %s @ %s fps".grey, progress.percentComplete, progress.eta, progress.fps);
+        //     })
+        //     .on("end", function () {
+        //         console.log(" > Conversion sucess!".green);
+        //         if (config.remove) {
+        //             _fs.unlink(tsfile);
+        //         }
+        //     })
+        //     .on("complete", function () {
+        //         _fs.unlink(filelock);
+        //         console.log(" > Conversation complete...".grey);
+        //         fn(null);
+        //     });
 
     } catch (err) {
         console.error(" > %s".red, err);

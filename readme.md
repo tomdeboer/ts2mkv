@@ -34,8 +34,10 @@ Default configuration
 ---
 ```
 var config  = {
-    encoder    : "x264",
+    encoder    : "libx264",
+    remove     : true,
     locktimeout: 24*3600,
+    bitrate    : "8000k",
     dirs       : []
 };
 ```
@@ -44,10 +46,16 @@ Options
 ---
 
 #### `encoder` (string)
-This is the encoder that is used by ffmpeg. [Click here for a list of supported encoders.](https://trac.handbrake.fr/wiki/Encoders#Video)
+This is the encoder that is used by ffmpeg. To find out what encoders are available on your system, run ```ffmpeg -codecs```.
+
+#### `remove` (boolean)
+Specifies if the source file (.ts file) will be removed after completed conversion. ```true``` means remove after complete, ```false``` leaves the source file intact.
 
 #### `locktimeout` (integer)
 This option specifies the time (in seconds) that a lock is valid. If the time at which the file was locked is longer than ```locktimeout``` seconds ago, the lock is lifted (file deleted).
+
+#### `bitrate` (string or integer)
+An string or integer describing the amount of bits a second (5000k or 5000000 for 5000kb/s). 8 Mb/s is default.
 
 #### `dirs` (array of string)
 An array of directories that will have their .ts files converted

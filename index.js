@@ -10,7 +10,7 @@ var ffmpeg  = require('fluent-ffmpeg');
 
 var queue   = [];
 var config  = {
-    encoder    : "x264",
+    encoder    : "libx264",
     remove     : true,
     locktimeout: 24*3600,
     bitrate    : "8000k",
@@ -31,7 +31,6 @@ function convert(filepath, fn) {
     try {
         // Init some file information
         var filepaths = _path.parse(filepath);
-        // var fileinfo  = _fs.statSync(filepath);
         var filelock  = _path.join(filepaths.dir, filepaths.name + '.lock');
 
         var timestamp = Math.floor(new Date()/1000);
@@ -83,41 +82,6 @@ function convert(filepath, fn) {
         })
 
         .run();
-        
-
-
-
-        // _hbjs.spawn({
-        //     aencoder: "copy:ac3",
-        //     modulus: 4,
-        //     decomb: "bob",
-        //     encoder: config.encoder || "x264",
-        //     quality: 20,
-        //     // "use-opencl": "",
-        //     // "use-hwd": "",
-        //     input: tsfile,
-        //     output: mkvfile
-        // })
-        //     .on("begin", function () {
-        //         console.log(" > Starting encoding...".grey);
-        //     })
-        //     .on("error", function (err) {
-        //         console.error(" > Handbrake error: %s".red, err);
-        //     })
-        //     .on("progress", function (progress) {
-        //         console.log(" > status: %s, ETA: %s @ %s fps".grey, progress.percentComplete, progress.eta, progress.fps);
-        //     })
-        //     .on("end", function () {
-        //         console.log(" > Conversion sucess!".green);
-        //         if (config.remove) {
-        //             _fs.unlink(tsfile);
-        //         }
-        //     })
-        //     .on("complete", function () {
-        //         _fs.unlink(filelock);
-        //         console.log(" > Conversation complete...".grey);
-        //         fn(null);
-        //     });
 
     } catch (err) {
         console.error(" > %s".red, err);

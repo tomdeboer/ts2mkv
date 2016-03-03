@@ -14,6 +14,7 @@ var config  = {
     remove     : true,
     locktimeout: 24*3600,
     bitrate    : "8000k",
+    haswell    : false,
     dirs       : []
 };
 
@@ -53,14 +54,12 @@ function convert(filepath, fn) {
         var mkvfile = _path.join(filepaths.dir, filepaths.name + '.mkv');
 
         var command = ffmpeg(tsfile)
-        .videoCodec('libx264')
-        .videoBitrate(config.bitrate)
-        .videoFilters('eq=contrast=1.02')
-        .duration(10)
-        .audioCodec('copy')
-        .outputOptions(
-            '-sn'           // No subtiles
-        )
+        .videoCodec('libx264')            // Which encoding codec to use
+        .videoBitrate(config.bitrate)     // Around 7500k visually the same as the source
+        .videoFilters('eq=contrast=1.02') // When using Intel QSV, the contrast drops with the color profile
+        .videoFilters('yadif=1')          // Deinterlace using yadif
+        .audioCodec('copy')               // Make no changes/conversion to audio
+        .outputOptions('-sn')             // No subtiles
         .output(mkvfile)
         
         .on('start', function(commandLine) {
@@ -79,9 +78,17 @@ function convert(filepath, fn) {
                 _fs.unlink(tsfile);
             }
             fn(null);
-        })
+        });
 
-        .run();
+        if (config.haswell) {
+            command.outputOptions(
+                '-look_ahead'      , 1, // Look ahead for Haswell QSV
+                '-look_ahead_depth', 10 // Look ahead depth
+            );
+
+        }
+
+        command.run();
 
     } catch (err) {
         console.error(" > %s".red, err);

@@ -54,7 +54,7 @@ function convert(filepath, fn) {
         var mkvfile = _path.join(filepaths.dir, filepaths.name + '.mkv');
 
         var command = ffmpeg(tsfile)
-        .videoCodec('libx264')            // Which encoding codec to use
+        .videoCodec(config.encoder)       // Which encoding codec to use
         .videoBitrate(config.bitrate)     // Around 7500k visually the same as the source
         .videoFilters('eq=contrast=1.02') // When using Intel QSV, the contrast drops with the color profile
         .videoFilters('yadif=1')          // Deinterlace using yadif
@@ -70,6 +70,7 @@ function convert(filepath, fn) {
         })
         .on('error', function(err, stdout, stderr) {
             console.log('Cannot process video: '.red.bold, err.message);
+            fn(null);
         })
         .on('end', function() {
             console.log(" > Conversion finished".green.bold);
@@ -85,7 +86,8 @@ function convert(filepath, fn) {
                 '-look_ahead'      , 1, // Look ahead for Haswell QSV
                 '-look_ahead_depth', 10 // Look ahead depth
             );
-
+        } else {
+            command.outputOptions('-look_ahead' , 0);
         }
 
         command.run();

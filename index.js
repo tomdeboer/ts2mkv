@@ -60,6 +60,7 @@ function convert(filepath, fn) {
         .videoFilters('yadif=1')          // Deinterlace using yadif
         .audioCodec('copy')               // Make no changes/conversion to audio
         .outputOptions('-sn')             // No subtiles
+        .outputOptions('-bufsize', '10M')
         .output(mkvfile)
         
         .on('start', function(commandLine) {

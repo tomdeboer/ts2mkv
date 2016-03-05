@@ -52,6 +52,7 @@ function convert(filepath, fn) {
 
         var tsfile  = filepath;
         var mkvfile = _path.join(filepaths.dir, filepaths.name + '.mkv');
+        var timeout = null;
 
         var command = ffmpeg(tsfile)
         .videoCodec(config.encoder)       // Which encoding codec to use
@@ -62,24 +63,43 @@ function convert(filepath, fn) {
         .outputOptions('-sn')             // No subtiles
         .outputOptions('-bufsize', '10M')
         .output(mkvfile)
-        
-        .on('start', function(commandLine) {
-            console.log('Spawned ffmpeg with command:'.grey, commandLine);
-        })
-        .on('progress', function(progress) {
-            console.log('Processing:'.grey, progress);
-        })
-        .on('error', function(err, stdout, stderr) {
-            console.log('Cannot process video: '.red.bold, err.message);
-            fn(null);
-        })
-        .on('end', function() {
-            console.log(" > Conversion finished".green.bold);
+
+        function finish(no_errors){
+            console.log(" > Finished", no_errors ? "without".green : "with".red, "errors");
+            clearTimeout(timeout);
             _fs.unlink(filelock);
-            if (config.remove) {
+            if (config.remove && no_errors === true) {
                 _fs.unlink(tsfile);
             }
             fn(null);
+        }
+        function watchdog(){
+            if(progress == null){
+                console.log("Watchdog timed out!".red);
+                command.kill();
+                finish();
+            }
+            console.log("Watchdog OK".green);
+        }
+        function watchdogReset () {
+            clearTimeout(timeout);
+            setTimeout(watchdogReset, 5000);
+        }
+        command.on('start', function(commandLine) {
+            console.log('Spawned ffmpeg with command:'.grey, commandLine);
+            watchdogReset();
+        })
+        .on('progress', function(progress) {
+            console.log('Processing:'.grey, progress);
+            watchdogReset();
+        })
+        .on('error', function(err, stdout, stderr) {
+            console.log('Cannot process video: '.red.bold, err.message);
+            finish();
+        })
+        .on('end', function() {
+            console.log(" > Conversion finished".green.bold);
+            finish(true);
         });
 
         if (config.haswell) {
